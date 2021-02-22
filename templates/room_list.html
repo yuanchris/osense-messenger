@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Room</title>
+    <!-- <script src="/socket.io/socket.io.js"></script> -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+<body>
+<main>
+
+  <div class = 'socket'>
+    <div>
+        <h2>房間列表</h2>
+        <p id='roomIntro'>進入廠商房間</p>
+      <ul>
+        <li id="room_1"><a href="/room/room_1">1號</a> <span>房內人數：0</span></li>
+        <li id="room_2"><a href="/room/room_2">2號</a> <span>房內人數：0</span></li>
+        <li id="room_3"><a href="/room/room_3">3號</a> <span>房內人數：0</span></li>
+        <li id="room_4"><a href="/room/room_4">4號</a> <span>房內人數：0</span></li>
+        <li id="room_5"><a href="/room/room_5">5號</a> <span>房內人數：0</span></li>
+      </ul>
+    </div>
+    <div id="messages"></div>
+    <a class="nav-link" href="/logout">登出</a>
+    <!-- <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form> -->
+  </div>
+
+
+  </main>
+
+
+
+</body>
+</html>

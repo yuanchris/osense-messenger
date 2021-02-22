@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{roomId}}</title>
+        <link rel="stylesheet" href="/static/css/room.css">
+        <!-- <script src="/socket.io/socket.io.js"></script> -->
+        <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script></head>
+    </head>
+    <body>
+        <main>
+            <div class = 'chat'>
+                <div id = 'roomName'><h3> 房間：<span id="roomId">{{roomId}}</span></h3></div>
+                <div class = 'info'>你的名字：<span id="userName">{{username}}</span> <br/>
+                    房間人數： <span id="count"></span> <br/>
+                    在線鄉民： <span id="users"></span></div>
+
+                <div id="msglog"></div>
+                <textarea name="message" id="messageInput"></textarea>
+                <br/>
+                按Enter鍵發送訊息
+                <button id="back" onclick = "back()">回到房間列表</button>
+            </div>
+        </main>
+        <script src="/static/js/room.js"></script>
+    </body>
+</html>
