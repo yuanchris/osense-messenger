@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <meta http-equiv="X-UA-Compatible" content="ie=edge"> -->
+  <title>廠商回復</title>
+  <link rel="stylesheet" href="/static/css/index.css">
+  <link rel="stylesheet" href="/static/css/serve.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+
+<body>
+  <div class="page serve-page">
+    <div class="row panel">
+      <div class="list-panel">
+        <ul class="client-ul">
+        </ul>
+      </div>
+      <div class="chat-panel">
+        <div class="container">
+          <div class="header bg-blue">廠商回復</div>
+          <div class="room"></div>
+          <div class="foot">
+            <form role="form" method="post">
+              <textarea class="mesbox" wrap="virtual"></textarea>
+              <div class="row btn-row">
+                <div class="btn close-btn" >
+                    <a href="/logout">登出</a>
+                </div>
+                <!-- <input class="btn close-btn" type = "button" value="登出"> -->
+
+                <input class="btn btn-blue" type="button" value="發送" />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="news-panel">
+        <ul class="news-ul">
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script src="/static/js/serve.js"></script>
+</body>
+
+</html>

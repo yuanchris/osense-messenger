@@ -1,0 +1,238 @@
+/* 通用样式 */
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+  }
+  div {
+    box-sizing: border-box;
+  }
+  /* 官网样式 */
+  .page-conatiner {
+    width: 90%;
+    height: 90%;
+    margin: 10px auto;
+    border: 1px solid #b5b5b5;
+  }
+  /* 在线咨询样式 */
+  .contact {
+    position: fixed;
+    bottom: 50px;
+    right: 60px;
+    background: #5db2ff;
+    color: #fff;
+    width: 100px;
+    height: 60px;
+    justify-content: center;
+    z-index: 2;
+    cursor: pointer;
+  }
+  .chat-panel {
+    z-index: 3;
+    position: fixed;
+    right: 20px;
+    bottom: 40px;
+    width: 300px;
+    background: #fff;
+    /* display: none; */
+  }
+  .chat-panel .header {
+    background: #5db2ff;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+  .chat-panel .room {
+    background: #fff;
+    height: 400px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 12px 0;
+    font-size: 14px;
+    border: 8px solid #eee;
+  }
+  .chat-panel .foot {
+    padding: 0 8px 8px 8px;
+    background: #eee;
+  }
+  .chat-panel .mesbox {
+    width: 280px;
+    height: 60px;
+    border: none;
+    background: #fff;
+    outline: none;
+  }
+  .chat-panel .btn-row {
+    justify-content: flex-end;
+    margin-top: 6px;
+  }
+  .chat-panel .btn {
+    text-align: center;
+    width: 68px;
+    padding: 4px 0;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .chat-panel .close-btn {
+    color: #000;
+    border: 1px solid #ccc;
+    margin-right: 16px;
+    background: #fff;
+  }
+  a{
+    text-decoration: None;
+    color: #000;
+  }
+
+  .chat-panel .btn-blue {
+    color: #fff;
+    background: #5db2ff;
+    border: none;
+  }
+  .msg-item {
+    width: 100%;
+    margin-bottom: 14px;
+    align-items: flex-start;
+  }
+  .msg-item.send {
+    justify-content: flex-end;
+  }
+  .msg-item.send .col {
+    align-items: flex-end;
+  }
+  .msg-item.recive {
+    justify-content: flex-start;
+  }
+  .msg-item.send .name {
+    text-align: right;
+  }
+  .msg-item .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 0 8px;
+    flex-shrink: 0;
+  }
+  .msg-item .name {
+    color: gray;
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+  .msg-item .msg {
+    padding: 6px 8px;
+    background: #eee;
+    border-radius: 4px;
+    max-width: 190px;
+  }
+  .msg-item .time {
+    font-size: 8px;
+    color: grey;
+    padding: 6px 8px;
+    border-radius: 4px;
+    max-width: 190px;
+  }
+
+
+  .msg-item.send .msg {
+    background: #5db2ff69;
+  }
+  .jiao-left {
+    width: 0;
+    height: 0;
+    border: solid 6px;
+    border-color: #fff #eee #fff #fff;
+    margin-top: 5px;
+    margin-left: -6px;
+  }
+  .jiao-right {
+    width: 0;
+    height: 0;
+    border: solid 6px;
+    border-color: #fff  #fff #fff #5db2ff69;
+    margin-top: 5px;
+    margin-right: -6px;
+  }
+  .mesinfo {
+    align-items: flex-start;
+  }
+  .brocast {
+    text-align: center;
+    font-size: 12px;
+    color: #9e9e9e;
+  }
+  textarea {
+    cursor: pointer;
+  /* }
+  @media screen and (max-width: 768px) {
+    html, body {
+      font-size: 0.26rem;
+      height: 100%;
+    }
+    .page-conatiner {
+      display: none;
+    }
+    .chat-panel {
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      position: relative;
+      right: 0;
+      bottom: 0;
+    }
+    .chat-panel .mesbox {
+      width: 80%;
+      height: 0.7rem;
+      cursor: pointer;
+      flex-shrink: 1;
+      font-size: 0.28rem;
+      box-sizing: border-box;
+      padding: 10px 4px;
+    }
+    .chat-panel .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-panel .room {
+      flex-grow: 1;
+      flex-shrink: 1;
+      padding-top: 45px;
+    }
+    .chat-panel .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+    .chat-panel .form {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+    .chat-panel .close-btn {
+      display: none;
+    }
+    .chat-panel .btn-blue {
+      flex-shrink: 0;
+      margin-left: 4px;
+      height: 0.7rem;
+      padding: 2px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-panel .btn-row {
+      margin-top: 0;
+    }
+  } */

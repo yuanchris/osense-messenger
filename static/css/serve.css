@@ -1,0 +1,70 @@
+.serve-page {
+    /* position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 600px; */
+    margin: 30px auto;
+  }
+  .serve-page .panel {
+    align-items: flex-start;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    /* background: #eee; */
+  }
+  .serve-page .chat-panel {
+    position: relative;
+    right: 0;
+    top: 0;
+  }
+  .serve-page .list-panel {
+    flex-shrink: 0;
+    width: 180px;
+    margin-right: 10px;
+  }
+  .serve-page .list-panel ul {
+    margin: 0;
+    padding: 0;
+  }
+  .serve-page .list-panel li {
+    list-style: none;
+    margin-bottom: 2px;
+    background: #eee;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  .serve-page .list-panel li.noread {
+    background: orange;
+  }
+  .serve-page .list-panel li.active {
+    background: #b4d9f7;
+  }
+  .serve-page .chat-panel .mesbox {
+    width: 614px;
+    height: 90px;
+  }
+  .serve-page .chat-panel {
+    width: 650px;
+  }
+  .serve-page .chat-panel .btn-blue {
+    margin-right: 15px;
+  }
+  .news-panel {
+    height: 582px;
+    background: #eee;
+    width: 280px;
+    text-align: center;
+    font-size: 14px;
+    color: gray;
+    margin-left: 10px;
+    padding: 30px 0;
+  }
+  .news-panel ul {
+    margin: 0;
+    padding: 0;
+  }
+  .news-panel li {
+    list-style: none;
+    margin-bottom: 14px;
+  }

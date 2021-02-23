@@ -37,49 +37,65 @@ class User(UserMixin):
 
 #  ==== socket ====
 roomInfo = {}
-@socketio.on('join')
-def join(data):
-    roomID = data['room']
-    user = data['username']
-    if roomID not in roomInfo:
-        roomInfo[roomID] = []
-    try:
-        if roomInfo[roomID].index(user) != -1:
-            emit('loginFail', '')
-            return
-    except ValueError:
-        pass
-    roomInfo[roomID].append(user)
-    # print('join room', roomInfo)
-    join_room(data['room'])
-    emit('sys', (f'{user}加入了房間', roomInfo[roomID]), room =  roomID)
+talkList = {}
+clientList = []
+onlinePeople = 0
 
-@socketio.on('send_message')
-def send_message(data):
-    user = current_user.get_id()
-    # print(roomInfo)
-    msg = data['msg']
-    roomID = data['roomID']
-    create_date = datetime.now()
-    create_time = create_date.strftime('%H:%M')
-    emit('msg', (user,msg,create_time), room = roomID)
+@socketio.on('loginIn') # 客戶進入
+def loginIn(msg):
+    # print('client in')
+    global onlinePeople 
+    onlinePeople += 1
+    obj = {
+      'name': msg,
+      'flag': onlinePeople
+    }
+    clientList.append(obj)
+    emit('clientInto', obj, broadcast=True)
 
 
-# @socketio.on('disconnect')
-# def disconnect():
-    # user = current_user.get_id()
-    # if roomID  in roomInfo:
-    #     roomInfo[roomID] = []
-    # index = roomInfo[roomID].indexOf(user)
-    # print('disconnect', roomInfo)
-    # leave_room(room)
+@socketio.on('loginOut') 
+def loginOut(msg):
+    # print('client out')
+    obj = 0
+    for i in range(len(clientList)):
+        if clientList[i]['name'] == msg:
+            obj = clientList[i]['name']
+            clientList.pop(i)
+            break
+    emit('clientLeave', obj, broadcast=True)
 
-@socketio.on('get_disconnect')
-def get_disconnect(roomID):
-    user = current_user.get_id()
-    roomInfo[roomID].remove(user)    
-    # print('get_disconnect', roomID)
-    emit('sys', (f'{user}退出了房間', roomInfo[roomID]), room =  roomID)
+
+@socketio.on('msgFromClient')
+def msgFromClient(msg):
+    # obj = {
+    #     'from': 'client',
+    #     'content': msg['content'],
+    #     'name': msg['name'],
+    #     # 'time': datetime.now().strftime('%m-%d, %H:%M')
+    # }
+    emit('reciveClientMsg', msg, broadcast=True)
+
+@socketio.on('msgFromServe')
+def msgFromServe(msg):
+    print('talkList: ', talkList)
+    # if msg['to']['name'] not in talkList:
+    #     talkList[msg['to']['name']] = []
+
+    # talkList[msg['to']['name']].append({
+    #     'from': 'serve',
+    #     'content': msg['content'],
+    # })
+
+
+    emit(msg['to']['name'], msg, broadcast=True)
+
+# @socketio.on('get_disconnect')
+# def get_disconnect(roomID):
+#     user = current_user.get_id()
+#     roomInfo[roomID].remove(user)    
+#     # print('get_disconnect', roomID)
+#     emit('sys', (f'{user}退出了房間', roomInfo[roomID]), room =  roomID)
 
 # ===== end socket =====
 
@@ -101,10 +117,10 @@ def login():
 
     if request.method == "GET":
         if current_user.is_active:
-            # if current_user.get_id() == 'osense':
-            #     print('you are osense')
-            
-            return redirect(url_for("roomlist"))
+            if current_user.get_id() == 'osense':
+                return redirect(url_for("factory"))
+            else:
+                return redirect(url_for("client"))
         return render_template("login.html")
     else:
         user_id = request.form["user_id"]
@@ -115,16 +131,28 @@ def login():
             user = User()
             user.id = user_id
             login_user(user)
-
-            return redirect(url_for("roomlist"))
+            if user_id == 'osense':
+                return redirect(url_for("factory"))
+            else:
+                return redirect(url_for("client"))
 
         flash("login failed... ")
         return render_template("login.html")
 
+@app.route("/factory")
+@login_required
+def factory():
+    return render_template("factory.html")
+
+@app.route("/client")
+@login_required
+def client():
+    return render_template("client.html",  username = current_user.id)
+
 
 @app.route("/logout")
 def logout():
-    user_id = current_user.get_id()
+    # user_id = current_user.get_id()
     logout_user()
     flash(f"See you next time")
     return render_template("login.html")
