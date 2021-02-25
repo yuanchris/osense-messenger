@@ -1,17 +1,14 @@
 $(document).ready(function () {
 
     var iosocket = io.connect();
-  
-    // if (!sessionStorage.username) {
-    //   sessionStorage.username = new Date().getTime()
-    // }
-    // var username = sessionStorage.username;
     let username = $('#userName').text();
+    let factory_id = $('#factory_id').text();
+
     console.log(username)
-    iosocket.emit('loginIn', username); // 进入页面
+    iosocket.emit('clientJoin', username, factory_id); // 进入页面
   
     window.onunload = function () {  // 关闭页面
-        iosocket.emit('loginOut', username)
+        iosocket.emit('clientOut', username, factory_id)
     }
     $(".btn-blue").click(function () {  // 发送消息
         var text = $(".mesbox").val();
@@ -20,7 +17,8 @@ $(document).ready(function () {
                 from: 'client',
                 name: username,
                 content: text,
-                time: formatDate(parseInt(Date.now()), 'MM-dd hh:mm')
+                time: formatDate(parseInt(Date.now()), 'MM-dd hh:mm'),
+                room: factory_id,
             }
             iosocket.emit('msgFromClient', data);
             $('.mesbox').val('');

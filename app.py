@@ -41,29 +41,37 @@ talkList = {}
 clientList = []
 onlinePeople = 0
 
-@socketio.on('loginIn') # 客戶進入
-def loginIn(msg):
+@socketio.on('factoryJoin') # 廠商進入
+def factoryJoin(factory_id):
+    print('factoryJoin:', factory_id)
+    join_room(factory_id)
+
+
+@socketio.on('clientJoin') # 客戶進入
+def clientJoin(username, factory_id):
     # print('client in')
     global onlinePeople 
     onlinePeople += 1
     obj = {
-      'name': msg,
+      'name': username,
       'flag': onlinePeople
     }
     clientList.append(obj)
-    emit('clientInto', obj, broadcast=True)
+    join_room(factory_id)
+    emit('clientInto', obj, room = factory_id)
 
 
-@socketio.on('loginOut') 
-def loginOut(msg):
+@socketio.on('clientOut') 
+def clientOut(username, factory_id):
     # print('client out')
     obj = 0
     for i in range(len(clientList)):
-        if clientList[i]['name'] == msg:
+        if clientList[i]['name'] == username:
             obj = clientList[i]['name']
             clientList.pop(i)
             break
-    emit('clientLeave', obj, broadcast=True)
+    
+    emit('clientLeave', obj, room = factory_id)
 
 
 @socketio.on('msgFromClient')
@@ -74,11 +82,11 @@ def msgFromClient(msg):
     #     'name': msg['name'],
     #     # 'time': datetime.now().strftime('%m-%d, %H:%M')
     # }
-    emit('reciveClientMsg', msg, broadcast=True)
+    emit('reciveClientMsg', msg, room = msg['room'])
 
-@socketio.on('msgFromServe')
-def msgFromServe(msg):
-    print('talkList: ', talkList)
+@socketio.on('msgFromFactory')
+def msgFromFactory(msg):
+    # print('talkList: ', talkList)
     # if msg['to']['name'] not in talkList:
     #     talkList[msg['to']['name']] = []
 
@@ -88,7 +96,7 @@ def msgFromServe(msg):
     # })
 
 
-    emit(msg['to']['name'], msg, broadcast=True)
+    emit(msg['to']['name'], msg, room = msg['room'])
 
 # @socketio.on('get_disconnect')
 # def get_disconnect(roomID):
@@ -118,9 +126,9 @@ def login():
     if request.method == "GET":
         if current_user.is_active:
             if current_user.get_id() == 'osense':
-                return redirect(url_for("factory"))
+                return redirect(url_for("factory", factory_id = current_user.get_id()))
             else:
-                return redirect(url_for("client"))
+                return redirect(url_for("roomlist"))
         return render_template("login.html")
     else:
         user_id = request.form["user_id"]
@@ -132,17 +140,17 @@ def login():
             user.id = user_id
             login_user(user)
             if user_id == 'osense':
-                return redirect(url_for("factory"))
+                return redirect(url_for("factory", factory_id = user_id))
             else:
-                return redirect(url_for("client"))
+                return redirect(url_for("roomlist"))
 
         flash("login failed... ")
         return render_template("login.html")
 
-@app.route("/factory")
+@app.route("/factory/<factory_id>")
 @login_required
-def factory():
-    return render_template("factory.html")
+def factory(factory_id):
+    return render_template("factory.html", factory_id = factory_id)
 
 @app.route("/client")
 @login_required
@@ -165,11 +173,11 @@ def roomlist():
         return render_template("room_list.html", messages=current_user.id)
         # return 'Logged in as: ' + current_user.id
 
-@app.route("/room/<roomId>")
+@app.route("/room/<factory_id>")
 @login_required
-def room(roomId):
+def room(factory_id):
     if current_user.is_active:
-        return render_template("room.html", roomId = roomId, 
+        return render_template("client.html", factory_id = factory_id, 
             username = current_user.id)
 
 if __name__ == "__main__":

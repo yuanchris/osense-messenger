@@ -1,6 +1,6 @@
 var currentClient = { flag: -1, name: null } // 当前客户
 var clientList = {}
-
+let factory_id = $('#factory_id').text();
 
 function formatDate(date, formatString) {
 /** @formatString 格式化日期 yyyy-MM-dd hh:mm:ss */
@@ -35,7 +35,7 @@ function getMsgHtml(msg, name) {
                 </div>
             </div>`
     }
-    if (msg.from == 'serve') {
+    if (msg.from == 'factory') {
         return `<div class="msg-item row send">
                 <div class="col">
                     <div class="name">在線客服</div>
@@ -87,7 +87,7 @@ function addMsg(msg, clientName) { // 放入消息列表
     }
     clientList[clientName].list.push(msg)
     clientList[clientName].noread = noread
-    console.log(clientList)
+    // console.log(clientList)
 }
 function resizeRoomView() { // 重置当前聊天窗视图
     let html = ''
@@ -156,12 +156,13 @@ $(document).ready(function () {
                 var text = $(".mesbox").val();
                 if (text != "") {
                     var data = {
-                        from: 'serve',
+                        from: 'factory',
                         to: currentClient,
                         content: text,
-                        time: formatDate(parseInt(Date.now()), 'MM-dd hh:mm')
+                        time: formatDate(parseInt(Date.now()), 'MM-dd hh:mm'),
+                        room: factory_id,
                     }
-                    iosocketServe.emit('msgFromServe', data);
+                    iosocketServe.emit('msgFromFactory', data);
                     $('.mesbox').val('');
                     updateRoomView(0, data, currentClient.name);
                 }
@@ -169,6 +170,7 @@ $(document).ready(function () {
         })
     iosocketServe.on('connect', function () {
         console.log('connect')
+        iosocketServe.emit('factoryJoin', factory_id);
         iosocketServe.on('clientInto', function (client) {
             clientIn(client)
         })
