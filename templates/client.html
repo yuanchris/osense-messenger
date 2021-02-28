@@ -1,72 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <title>客戶端</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <meta http-equiv="X-UA-Compatible" content="ie=edge"> -->
+  <title>客戶</title>
   <link rel="stylesheet" href="/static/css/index.css">
+  <link rel="stylesheet" href="/static/css/factory.css">
   <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-  <script>
-    function resizeRootNodeFontSize() {
-      /** 更改根节点的字体大小，适用于移动端的rem适配 */
-      const html = document.getElementsByTagName('html')[0]
-      const getScale = function () {
-        let width = html.clientWidth,
-          scale = Number(width / 750).toFixed(4)  // 320:0.427  768:1.024
-        lastScale = (scale >= 1.024) ? 1.024 : (scale <= 0.427 ? 0.427 : scale)
-        return lastScale
-      }
-      const changePage = function () {
-        let lastScale = getScale()
-        if (html.clientWidth <= 768) {
-          html.setAttribute('style', 'font-size:' + (lastScale * 100).toFixed(3) + 'px');
-        } else {
-          html.setAttribute('style', '')
-        }
-      }
-      changePage()
-      const resizeEvent = 'orientationchange' in window ? 'orientationchange' : 'resize'
-      if (!document.addEventListener) return
-      window.addEventListener(resizeEvent, changePage, false)
-      window.addEventListener('DOMContentLoaded', changePage, false)
-    }
-    resizeRootNodeFontSize()
-  </script>
 </head>
 
 <body>
-  <div class="page-conatiner">
-    Your name: <span id="userName">{{username}}</span><br>
-    You are meeting with: <span id="factory_id">{{factory_id}}</span>
-    <div class="btn close-btn" >
-        <ul>
-          <li><a href="/roomlist">回廠商列表</a></li>
-          <li><a href="/logout">登出</a></li>
+  <div class="page serve-page">
+    <h1 style="text-align:center">
+        Your name: <span id="userName">{{username}}</span></h1>
+
+    <div class="row panel">
+      <div class="list-panel">
+        <ul class="client-ul">
         </ul>
+      </div>
+      <div class="chat-panel">
+        <div class="container">
+          <div class="header bg-blue"><span id="factory_window_name">Factory</span></div>
+          <div class="room"></div>
+          <div class="foot">
+            <form role="form" method="post">
+              <textarea class="mesbox" wrap="virtual"></textarea>
+              <div class="row btn-row">
+                <div class="btn close-btn" >
+                    <a href="/logout">登出</a>
+                </div>
+                <!-- <input class="btn close-btn" type = "button" value="登出"> -->
 
-    </div>
-  </div>
-
-  <div class="contact row">在線諮詢</div>
-  <div class="chat-panel">
-    <div class="container">
-      <div class="header bg-blue">在線諮詢</div>
-      <div class="room"></div>
-      <div class="foot">
-        <div class="form">
-          <textarea class="mesbox" wrap="virtual"></textarea>
-          <!-- <input class="mesbox phone" type="text"/> -->
-          <div class="row btn-row">
-            <div class="btn close-btn">關閉</div>
-            <div class="btn btn-blue">發送</div>
-            <!-- <input  type="button" value="发送" /> -->
+                <input class="btn btn-blue" type="button" value="發送" />
+              </div>
+            </form>
           </div>
         </div>
       </div>
+
     </div>
   </div>
   <script src="/static/js/client.js"></script>
 </body>
+
 </html>

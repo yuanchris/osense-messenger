@@ -1,110 +1,170 @@
-$(document).ready(function () {
+let current_factory = {name: null } // 選到的廠商
+let userName = $('#userName').text(); // your name
+let mesList = {}
+let factory_list = []
 
-    var iosocket = io.connect();
-    let username = $('#userName').text();
-    let factory_id = $('#factory_id').text();
-
-    console.log(username)
-    iosocket.emit('clientJoin', username, factory_id); // 进入页面
-  
-    window.onunload = function () {  // 关闭页面
-        iosocket.emit('clientOut', username, factory_id)
+$(document).ready(async function () {
+    const get_factory_list =  await fetch(`/get_factory_list`,
+    {method:'GET'}).then((res) => res.json());
+    factory_list = get_factory_list;
+    const msg_history = await fetch(`/get_history_msg?clientOrFactory=client&name=${userName}`,
+    {method:'GET'}).then((res) => res.json());
+    if (msg_history !== 'Not found'){
+        mesList = msg_history;
     }
-    $(".btn-blue").click(function () {  // 发送消息
-        var text = $(".mesbox").val();
-        if (text != "") {
-            var data = {
-                from: 'client',
-                name: username,
-                content: text,
-                time: formatDate(parseInt(Date.now()), 'MM-dd hh:mm'),
-                room: factory_id,
+
+    for (let i in factory_list) {
+        if (!mesList[factory_list[i]]) {
+            mesList[factory_list[i]] = {
+              list: [],
+              noread: false
             }
-            iosocket.emit('msgFromClient', data);
-            $('.mesbox').val('');
-            sendHtml(username, data);
+          }
+        $('.client-ul').append(`<li class="client-li"  data-name='${factory_list[i]}'>${factory_list[i]}</li>`)
+    }
+
+
+    const iosocketServe = io.connect();
+    iosocketServe.on('connect', function () {
+        iosocketServe.on(`${userName}`, function (msg) {
+            updateRoomView('other', msg, msg.from)
+        })
+    })
+    $('.btn-blue').click(function () {
+        if (current_factory) {
+            let text = $(".mesbox").val();
+            if (text != "") {
+                let data = {
+                    from: userName,
+                    name: current_factory['name'],
+                    content: text,
+                    time: formatDate(parseInt(Date.now()), 'MM-dd hh:mm'),
+                }
+                iosocketServe.emit('msgFromClient', data);
+                $('.mesbox').val('');
+                updateRoomView(userName, data, current_factory.name);
+            }
         }
-    });
-    $('.close-btn').click(function () {
-      $('.chat-panel').css('display', 'none')
     })
-    $('.contact').click(function () {
-      $('.chat-panel').css('display', 'block')
-    })
-    $(".mesbox").on("blur",function(){
-      window.scroll(0,0);//失焦后强制让页面归位
-    });  
-    iosocket.on('connect', function () {
+    $('.client-ul').click(changeCurrent_factory)
+})
 
-      //获取消息
-      iosocket.on(username, function (msg) {
-        reciveHtml('客服', msg);
-      });
+function updateRoomView(type, msg, fromName) { // 收到訊息 更改視窗
+    addMsg(msg, fromName)
+    if (type == userName) { // 客戶自己發的
+        var html = "";
+        html += '<div class="msg-item row send">' +
+        '<div class="col">' +
+        `<div class="name">${userName}</div>` +
+        '<div class="row mesinfo">' +
+        `<div class="time">${msg.time.split(' ')[1]}</div>`+
+        '<div class="msg">' + msg.content + '</div>' +
 
-    });
-    // $('.mesbox').focus(function () {
-    //   console.log(document.documentElement.clientHeight)
-    //   // alert(document.documentElement.clientHeight)
-    //   $('html').height(document.documentElement.clientHeight - 100 + 'px')
-    // })
-  });
-  
-  function sendHtml(name, msg) {
-    var html = "";
-    html += '<div class="msg-item row send">' +
-      '<div class="col">' +
-      '<div class="name">You</div>' +
-      '<div class="row mesinfo">' +
-      `<div class="time">${msg.time.split(' ')[1]}</div>` +
-      '<div class="msg">' + msg.content + '</div>' +
-      '<div class="jiao-right"></div>' +
-      '</div>' +
-      '</div>' +
-      '<img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572927293148&di=e93c4aabed259d8845543f725b85d1b3&imgtype=0&src=http%3A%2F%2Fimg.zcool.cn%2Fcommunity%2F01460b57e4a6fa0000012e7ed75e83.png%401280w_1l_2o_100sh.png" class="avatar" />' +
-      '</div>';
-    $(".room").append(html);
-    $('.room').scrollTop($('.room')[0].scrollHeight);
-  }
-  
-  function stopDefaultKey(e) {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    } else {
-      window.event.returnValue = false;
+        '<div class="jiao-right"></div>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+        $(".room").append(html);
+        $('.room').scrollTop($('.room')[0].scrollHeight);
     }
-    return false;
-  }
-  function reciveHtml(name, msg) {
-    var html = "";
-    html += `<div class="msg-item row recive">
-              <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572953950629&di=06d8eb509480525ed9707e4dda361b54&imgtype=0&src=http%3A%2F%2Fimg2.3png.com%2F720f7b22a939834aca195ca984dcd114a6e2.png" class="avatar" />
-              <div class="col">
-                <div class="name">在線客服</div>
-                <div class="row mesinfo">
-                  <div class="jiao-left"></div>
-                  <div class="msg">${msg.content}</div>
-                  <div class="time">${msg.time.split(' ')[1]}</div>
+    else if (type == 'other' && current_factory.name == fromName) {
+        var html = "";
+        html += `<div class="msg-item row recive">
+                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572953950629&di=06d8eb509480525ed9707e4dda361b54&imgtype=0&src=http%3A%2F%2Fimg2.3png.com%2F720f7b22a939834aca195ca984dcd114a6e2.png" class="avatar" />
+                <div class="col">
+                    <div class="name">${fromName}</div>
+                    <div class="row mesinfo">
+                    <div class="jiao-left"></div>
+                    <div class="msg">${msg.content}</div>
+                    <div class="time">${msg.time.split(' ')[1]}</div>
+                    </div>
                 </div>
-              </div>
-            </div>`
-    $(".room").append(html);
-    $('.room').scrollTop($('.room')[0].scrollHeight);
-  }
-  
-  document.onkeydown = function (e) {
-    var ev = document.all ? window.event : e;
-    if (ev.keyCode == 13) {
-      $(".btn-blue").click();
-      stopDefaultKey(e)
+                </div>`
+        $(".room").append(html);
+        $('.room').scrollTop($('.room')[0].scrollHeight);
     }
-  }
-  
-  window.addEventListener('resize', function(){       //监测窗口大小的变化事件
-    var hh = window.innerHeight;     //当前可视窗口高度
-    console.log(hh)
-  })
+    return
+}
 
-  function formatDate(date, formatString) {
+function addMsg(msg, clientName) { // 儲存到mesList 若不是當前使用者，顯示橘色
+
+    
+    let noread = false
+    if (clientName != current_factory.name) {
+        noread = true
+        let arr = $('.client-li')
+        for(let i=0; i<arr.length; i++) {
+            let name = $(arr[i]).attr('data-name')
+            if(name == clientName) {
+                $(arr[i]).addClass('noread')
+            }
+        }
+    }
+    mesList[clientName].list.push(msg)
+    mesList[clientName].noread = noread
+    // console.log(mesList)
+}
+function resizeRoomView() { // 切換對話者時 更改對談內容
+    let html = ''
+    let list = mesList[current_factory.name].list
+    if(!list) return
+    for (let i = 0; i < list.length; i++) {
+        html += getMsgHtml(list[i], current_factory.name)
+    }
+    $('.room').html(html)
+}
+function getMsgHtml(msg, name) { // 切換客戶
+    if (msg.from == userName) {
+        return `<div class="msg-item row send">
+                    <div class="col">
+                        <div class="name">${userName}</div>
+                        <div class="row mesinfo">
+                            <div class="time">${msg.time.split(' ')[1]}</div>
+                            <div class="msg">${msg.content}</div>
+                            <div class="jiao-right"></div>
+                        </div>
+                    </div>
+                </div>`
+    }
+    else {
+        return `<div class="msg-item row recive">
+                    <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572953950629&di=06d8eb509480525ed9707e4dda361b54&imgtype=0&src=http%3A%2F%2Fimg2.3png.com%2F720f7b22a939834aca195ca984dcd114a6e2.png" class="avatar" />
+                    <div class="col">
+                        <div class="name">${name}</div>
+                        <div class="row mesinfo">
+                            <div class="jiao-left"></div>
+                            <div class="msg">${msg.content}</div>
+                            <div class="time">${msg.time.split(' ')[1]}</div>
+                        </div>
+                    </div>
+                </div>`
+    }
+
+}
+
+
+function changeCurrent_factory(e) {
+    let event = e || window.event
+    let target = event.target || event.srcElement
+    let name = $(target).attr('data-name')
+    current_factory = {
+        name: name,
+    }
+    $('.client-li').removeClass('active')
+    $(target).addClass('active')
+    $(target).removeClass('noread')
+    $('#factory_window_name').text(name);
+    resizeRoomView()
+}
+
+document.onkeydown = function (e) {
+    var ev = document.all ? window.event : e;
+    if (ev.keyCode == 13) { //enter 
+        $(".btn-blue").click();
+    }
+}
+
+function formatDate(date, formatString) {
     /** @formatString 格式化日期 yyyy-MM-dd hh:mm:ss */
         let mydate = new Date(date)
         let dateObj = {

@@ -1,2 +1,3 @@
 room = ['a','b']
-print(room.index('c'))
+mes_factory = {x : {} for x in room}
+print(mes_factory)

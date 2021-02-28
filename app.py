@@ -37,92 +37,53 @@ users = {
         "password": "2c6eccac92d3723c708c7dea066ce7b5c5f37c889a6227b6fc7266581542ba7f"
     },
 }
+
+factory_list = ['osense', 'timtos']
+
 class User(UserMixin):
     pass
 
 #  ==== socket ====
-roomInfo = {}
-talkList = {}
-clientList = []
 mesList = {}
-onlinePeople = 0
-
-@socketio.on('factoryJoin') # 廠商進入
-def factoryJoin(factory_id):
-    print('factoryJoin:', factory_id)
-    join_room(factory_id)
-
-
-@socketio.on('clientJoin') # 客戶進入
-def clientJoin(username, factory_id):
-    # print('client in')
-    global onlinePeople 
-    onlinePeople += 1
-    obj = {
-      'name': username,
-      'flag': onlinePeople
-    }
-    # clientList.append(obj)
-    join_room(factory_id)
-
-    emit('clientInto', obj, room = factory_id)
-
-
-@socketio.on('clientOut') 
-def clientOut(username, factory_id):
-    # print('client out')
-    # obj = username
-    # for i in range(len(clientList)):
-    #     if clientList[i]['name'] == username:
-    #         obj = clientList[i]['name']
-    #         clientList.pop(i)
-    #         break
-    
-    emit('clientLeave', username, room = factory_id)
-
+mes_factory = {x : {} for x in factory_list}
+mes_client = {}
 
 @socketio.on('msgFromClient')
 def msgFromClient(msg):
-    # obj = {
-    #     'from': 'client',
-    #     'content': msg['content'],
-    #     'name': msg['name'],
-    #     # 'time': datetime.now().strftime('%m-%d, %H:%M')
-    # }
-    if msg['room'] not in mesList:
-        mesList[msg['room']] = {}
-    if msg['name'] not in mesList[msg['room']]:
-        mesList[msg['room']][msg['name']] = {
+    if msg['from'] not in mes_client:
+        mes_client[msg['from']] = {}
+    if msg['name'] not in mes_client[msg['from']]:
+        mes_client[msg['from']][msg['name']] = {
             'list': [],
-            'name': msg['name'],
             'noread': True
         }
-    mesList[msg['room']][msg['name']]['list'].append(msg)
-    emit('reciveClientMsg', msg, room = msg['room'])
-    print(mesList)
+        mes_factory[msg['name']][msg['from']]= {
+            'list': [],
+            'noread': True
+        }
+    mes_client[msg['from']][msg['name']]['list'].append(msg)
+
+    # if msg['from'] not in mes_factory['name']:
+    #     mes_factory['name']['from']= {
+    #         'list': [],
+    #         'noread': True
+    #     }
+    mes_factory[msg['name']][msg['from']]['list'].append(msg)
+    emit(msg['name'], msg, broadcast=True)
+    print(mes_client)
+
 @socketio.on('msgFromFactory')
 def msgFromFactory(msg):
-    # print('talkList: ', talkList)
-    # if msg['to']['name'] not in talkList:
-    #     talkList[msg['to']['name']] = []
+    # if msg['name'] not in mes_factory[msg['from']]:
+    #     mes_factory[msg['from']][msg['name']] = {
+    #         'list': [],
+    #         'noread': True
+    #     }
+    mes_factory[msg['from']][msg['name']]['list'].append(msg)
+    mes_client[msg['name']][msg['from']]['list'].append(msg)
+    emit(msg['name'], msg, broadcast=True)
+    print(mes_factory)
 
-    # talkList[msg['to']['name']].append({
-    #     'from': 'serve',
-    #     'content': msg['content'],
-    # })
-
-    if msg['room'] not in mesList:
-        mesList[msg['room']] = {}
-    print(type(msg['name']), msg['name'])
-    if msg['name'] not in mesList[msg['room']]:
-        mesList[msg['room']][msg['name']] = {
-            'list': [],
-            'name': msg['name'],
-            'noread': False
-        }
-    mesList[msg['room']][msg['name']]['list'].append(msg)
-    emit(msg['name'], msg, room = msg['room'])
-    print(mesList)
 
 
 # ===== end socket =====
@@ -148,7 +109,7 @@ def login():
             if 'factory' in users[current_user.get_id()] and users[current_user.get_id()]['factory'] == True:
                 return redirect(url_for("factory", factory_id = current_user.get_id()))
             else:
-                return redirect(url_for("roomlist"))
+                return redirect(url_for("client"))
         return render_template("login.html")
     else:
         user_id = request.form["user_id"]
@@ -162,7 +123,7 @@ def login():
             if 'factory' in users[current_user.get_id()] and users[current_user.get_id()]['factory'] == True:
                 return redirect(url_for("factory", factory_id = user_id))
             else:
-                return redirect(url_for("roomlist"))
+                return redirect(url_for("client"))
 
         flash("login failed... ")
         return render_template("login.html")
@@ -200,22 +161,26 @@ def room(factory_id):
 def client():
     return render_template("client.html",  username = current_user.id)
 
+# ==== data api =====
+@app.route("/get_factory_list")
+def get_factory_list():
+    global factory_list
+    return jsonify(factory_list)
+
 @app.route("/get_history_msg")
-def get_history_msg( client = None):
+def get_history_msg():
     global mesList
     clientOrFactory = request.args['clientOrFactory']
-    factory = request.args['factory']
-    if clientOrFactory == 'client':
-        client = request.args['client']
-        # print('get_history_msg:', clientOrFactory, factory, client)
+    name = request.args['name']
 
     # http://127.0.0.1:5000/get_history_msg?clientOrFactory=factory&factory=456&client=789
-    if factory in mesList:
-        if clientOrFactory == 'factory':
-                return jsonify(mesList[factory])
-        else:
-            if client in mesList[factory]:
-                return jsonify(mesList[factory][client]['list'])
+    if clientOrFactory == 'factory':
+        if name in mes_factory:
+            return jsonify(mes_factory[name])
+    else:
+        if name in mes_client:
+            return jsonify(mes_client[name])
+
     return jsonify('Not found')
 
 if __name__ == "__main__":
