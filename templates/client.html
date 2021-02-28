@@ -38,11 +38,14 @@
 
 <body>
   <div class="page-conatiner">
-    <span id="userName">{{username}}</span>
-    <span id="factory_id">{{factory_id}}</span>
+    Your name: <span id="userName">{{username}}</span><br>
+    You are meeting with: <span id="factory_id">{{factory_id}}</span>
     <div class="btn close-btn" >
-      
-        <a href="/logout">登出</a>
+        <ul>
+          <li><a href="/roomlist">回廠商列表</a></li>
+          <li><a href="/logout">登出</a></li>
+        </ul>
+
     </div>
   </div>
 
