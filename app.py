@@ -52,19 +52,6 @@ mydb = myclient["osense-messenger"]
 collection_mes_factory = mydb["mes_factory"]
 collection_mes_client = mydb["mes_client"]
 
-# col_list = mydb.list_collection_names()
-
-# if 'mes_factory' not in col_list:
-#     mes_factory = {x : {} for x in factory_list}
-# else: 
-#     mongo_mes_factory = mydb["mes_factory"].find()
-
-# if 'mes_client' not in col_list:
-#     mes_client = {}
-# else: 
-#     mongo_mes_client = mydb["mes_factory"].find()
-
-
 #  ==== socket ====
 
 mes_factory = {x : {} for x in factory_list}
@@ -91,33 +78,35 @@ def msgFromClient(msg):
     client = msg['from']
     factory = msg['name']
     start = time.time()
-    collection_mes_factory.find_one_and_update({'name': factory, 'to': client, 'noread':'false'}, 
-    {'$push': { 'list': msg }},upsert=True)
-    collection_mes_client.find_one_and_update({'name': client, 'to': factory, 'noread':'false'}, 
-    {'$push': { 'list': msg }},upsert=True)
+    collection_mes_factory.find_one_and_update({'name': factory, 'to': client}, 
+    {'$push': { 'list': msg }, "$set": { "noread": "true" }},upsert=True)
+    collection_mes_client.find_one_and_update({'name': client, 'to': factory}, 
+    {'$push': { 'list': msg }, "$set": { "noread": "false" }},upsert=True)
     print('elapsed time ', time.time()-start)
     
-    # print(mes_client)
-
 @socketio.on('msgFromFactory')
 def msgFromFactory(msg):
 
     # mes_factory[msg['from']][msg['name']]['list'].append(msg)
     # mes_client[msg['name']][msg['from']]['list'].append(msg)
     emit(msg['name'], msg, broadcast=True)
-
     client = msg['name']
     factory = msg['from']
 
-    start = time.time()
-
-    collection_mes_factory.find_one_and_update({'name': factory, 'to': client, 'noread':'false'}, 
-    {'$push': { 'list': msg }},upsert=True)
-    collection_mes_client.find_one_and_update({'name': client, 'to': factory, 'noread':'false'}, 
-    {'$push': { 'list': msg }},upsert=True)
+    collection_mes_factory.find_one_and_update({'name': factory, 'to': client}, 
+    {'$push': { 'list': msg }, "$set": { "noread": "false"}},upsert=True)
+    collection_mes_client.find_one_and_update({'name': client, 'to': factory}, 
+    {'$push': { 'list': msg }, "$set": { "noread": "true" }},upsert=True)
     
-    # print(mes_factory)
-    print('elapsed time ', time.time()-start)
+@socketio.on('read_msg_fromFactory')
+def read_msg_fromFactory(factory, client):
+    collection_mes_factory.find_one_and_update({'name': factory, 'to': client}, 
+    { "$set": { "noread": "false" }})    
+
+@socketio.on('read_msg_fromClient')
+def read_msg_fromClient(client, factory):
+    collection_mes_client.find_one_and_update({'name': client, 'to': factory}, 
+    { "$set": { "noread": "false" }})    
 
 
 # ===== end socket =====
@@ -236,4 +225,4 @@ def get_history_msg():
 if __name__ == "__main__":
     # app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.debug = True
-    socketio.run(app, host="127.0.0.1", port=5000)
+    socketio.run(app, host="0.0.0.0", port=5000)

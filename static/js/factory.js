@@ -6,25 +6,26 @@ let mesList = {}
 $(document).ready(async function () {
     const msg_history = await fetch(`/get_history_msg?clientOrFactory=factory&name=${factory_id}`,
     {method:'GET'}).then((res) => res.json());
-    console.log('msg_history: ', msg_history);
 
     if (msg_history !== 'Not found' &  Object.keys(msg_history).length !== 0){
         mesList = msg_history;
         for (let name in mesList){
-            $('.client-ul').append(`<li class="client-li"  data-name='${name}'>${name}</li>`)
+            if (mesList[name].noread == 'true') {
+                $('.client-ul').append(`<li class="client-li noread"  data-name='${name}'>${name}</li>`)
+            } else {
+                $('.client-ul').append(`<li class="client-li"  data-name='${name}'>${name}</li>`)
+            }
         }
     } else {console.log('no history')}
 
     const iosocketServe = io.connect();
     iosocketServe.on('connect', function () {
-        console.log('connected')
         iosocketServe.on(`${factory_id}`, function (msg) {
-            console.log('get message')
             updateRoomView('client', msg, msg.from)
         })
     })
     $('.btn-blue').click(function () {
-        if (currentClient) {
+        if (currentClient.name!=null) {
             var text = $(".mesbox").val();
             if (text != "") {
                 var data = {
@@ -37,6 +38,8 @@ $(document).ready(async function () {
                 $('.mesbox').val('');
                 updateRoomView(data['from'], data, currentClient.name);
             }
+        } else {
+            alert('please select a client')
         }
     })
     $('.client-ul').click(changeCurrentClient)
@@ -85,14 +88,14 @@ function addMsg(msg, clientName) { // 儲存到mesList 若不是當前使用者�
     if (!mesList[clientName]) {
         mesList[clientName] = {
           list: [],
-          noread: false
+          noread: "false"
         }
         $('.client-ul').append(`<li class="client-li"  data-name='${clientName}'>${clientName}</li>`)
       }
     
-    let noread = false
+    let noread = "false"
     if (clientName != currentClient.name) {
-        noread = true
+        noread = "true"
         let arr = $('.client-li')
         for(let i = 0; i < arr.length; i++) { // add noread signal
             let name = $(arr[i]).attr('data-name')
@@ -103,7 +106,6 @@ function addMsg(msg, clientName) { // 儲存到mesList 若不是當前使用者�
     }
     mesList[clientName].list.push(msg)
     mesList[clientName].noread = noread
-    console.log(mesList)
 }
 function resizeRoomView() { // 切換對話者時 更改對談內容
     let html = ''
@@ -162,6 +164,8 @@ function changeCurrentClient(e) {
     $(target).removeClass('noread')
     $('#client_window_name').text(name);
     resizeRoomView()
+    const iosocketServe = io.connect();
+    iosocketServe.emit('read_msg_fromFactory', factory_id, name); 
 }
 
 

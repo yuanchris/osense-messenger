@@ -20,7 +20,7 @@
   }
   .serve-page .list-panel {
     flex-shrink: 0;
-    width: 180px;
+    /* width: 180px; */
     margin-right: 10px;
   }
   .serve-page .list-panel ul {
@@ -31,7 +31,7 @@
     list-style: none;
     margin-bottom: 2px;
     background: #eee;
-    padding: 6px 10px;
+    padding: 6px 30px;
     cursor: pointer;
   }
   .serve-page .list-panel li.noread {
@@ -42,7 +42,7 @@
   }
   .serve-page .chat-panel .mesbox {
     width: 614px;
-    height: 90px;
+    height: 60px;
   }
   .serve-page .chat-panel {
     width: 650px;

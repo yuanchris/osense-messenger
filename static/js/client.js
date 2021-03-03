@@ -19,10 +19,15 @@ $(document).ready(async function () {
         if (!mesList[factory_list[i]]) {
             mesList[factory_list[i]] = {
               list: [],
-              noread: false
+              noread: "false"
             }
           }
-        $('.client-ul').append(`<li class="client-li"  data-name='${factory_list[i]}'>${factory_list[i]}</li>`)
+
+        if (mesList[factory_list[i]].noread == 'true') {
+            $('.client-ul').append(`<li class="client-li noread"  data-name='${factory_list[i]}'>${factory_list[i]}</li>`)
+        } else {
+            $('.client-ul').append(`<li class="client-li"  data-name='${factory_list[i]}'>${factory_list[i]}</li>`)
+        }  
     }
 
     const iosocketServe = io.connect();
@@ -32,9 +37,11 @@ $(document).ready(async function () {
         })
     })
     $('.btn-blue').click(function () {
-        if (current_factory) {
+        if (current_factory.name!=null) {
+            console.log('in currnt_facotry')
             let text = $(".mesbox").val();
             if (text != "") {
+                console.log('in text')
                 let data = {
                     from: userName,
                     name: current_factory['name'],
@@ -45,6 +52,8 @@ $(document).ready(async function () {
                 $('.mesbox').val('');
                 updateRoomView(userName, data, current_factory.name);
             }
+        } else {
+            alert('please select a client')
         }
     })
     $('.client-ul').click(changeCurrent_factory)
@@ -91,9 +100,9 @@ function updateRoomView(type, msg, fromName) { // 收到訊息 更改視窗
 function addMsg(msg, clientName) { // 儲存到mesList 若不是當前使用者，顯示橘色
 
     
-    let noread = false
+    let noread = "false"
     if (clientName != current_factory.name) {
-        noread = true
+        noread = "true"
         let arr = $('.client-li')
         for(let i=0; i<arr.length; i++) {
             let name = $(arr[i]).attr('data-name')
@@ -159,6 +168,8 @@ function changeCurrent_factory(e) {
     $(target).removeClass('noread')
     $('#factory_window_name').text(name);
     resizeRoomView()
+    const iosocketServe = io.connect();
+    iosocketServe.emit('read_msg_fromClient', userName, name);     
 }
 
 document.onkeydown = function (e) {
