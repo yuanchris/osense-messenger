@@ -7,12 +7,14 @@ $(document).ready(async function () {
     const get_factory_list =  await fetch(`/get_factory_list`,
     {method:'GET'}).then((res) => res.json());
     factory_list = get_factory_list;
+
     const msg_history = await fetch(`/get_history_msg?clientOrFactory=client&name=${userName}`,
     {method:'GET'}).then((res) => res.json());
-    if (msg_history !== 'Not found'){
+    console.log('msg_history', msg_history)
+    if (msg_history !== 'Not found' &  Object.keys(msg_history).length !== 0){
         mesList = msg_history;
-    }
-
+    } else {console.log('no history')}
+    
     for (let i in factory_list) {
         if (!mesList[factory_list[i]]) {
             mesList[factory_list[i]] = {
@@ -22,7 +24,6 @@ $(document).ready(async function () {
           }
         $('.client-ul').append(`<li class="client-li"  data-name='${factory_list[i]}'>${factory_list[i]}</li>`)
     }
-
 
     const iosocketServe = io.connect();
     iosocketServe.on('connect', function () {
@@ -63,6 +64,7 @@ function updateRoomView(type, msg, fromName) { // 收到訊息 更改視窗
         '<div class="jiao-right"></div>' +
         '</div>' +
         '</div>' +
+        '<img src="/static/img/msn.png" class="avatar" />' +
         '</div>';
         $(".room").append(html);
         $('.room').scrollTop($('.room')[0].scrollHeight);
@@ -70,7 +72,7 @@ function updateRoomView(type, msg, fromName) { // 收到訊息 更改視窗
     else if (type == 'other' && current_factory.name == fromName) {
         var html = "";
         html += `<div class="msg-item row recive">
-                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572953950629&di=06d8eb509480525ed9707e4dda361b54&imgtype=0&src=http%3A%2F%2Fimg2.3png.com%2F720f7b22a939834aca195ca984dcd114a6e2.png" class="avatar" />
+                <img src="/static/img/factory.jpg" class="avatar" />
                 <div class="col">
                     <div class="name">${fromName}</div>
                     <div class="row mesinfo">
@@ -112,6 +114,7 @@ function resizeRoomView() { // 切換對話者時 更改對談內容
         html += getMsgHtml(list[i], current_factory.name)
     }
     $('.room').html(html)
+    $('.room').scrollTop($('.room')[0].scrollHeight);
 }
 function getMsgHtml(msg, name) { // 切換客戶
     if (msg.from == userName) {
@@ -124,11 +127,12 @@ function getMsgHtml(msg, name) { // 切換客戶
                             <div class="jiao-right"></div>
                         </div>
                     </div>
+                    <img src="/static/img/msn.png" class="avatar" />
                 </div>`
     }
     else {
         return `<div class="msg-item row recive">
-                    <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572953950629&di=06d8eb509480525ed9707e4dda361b54&imgtype=0&src=http%3A%2F%2Fimg2.3png.com%2F720f7b22a939834aca195ca984dcd114a6e2.png" class="avatar" />
+                    <img src="/static/img/factory.jpg" class="avatar" />
                     <div class="col">
                         <div class="name">${name}</div>
                         <div class="row mesinfo">
@@ -139,7 +143,7 @@ function getMsgHtml(msg, name) { // 切換客戶
                     </div>
                 </div>`
     }
-
+    
 }
 
 

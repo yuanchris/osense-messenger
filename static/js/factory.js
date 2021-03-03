@@ -1,21 +1,25 @@
 let currentClient = {name: null } // 當前客戶
-let mesList = {}
 let factory_id = $('#factory_id').text();
+let mesList = {}
+
 
 $(document).ready(async function () {
-    const iosocketServe = io.connect();
     const msg_history = await fetch(`/get_history_msg?clientOrFactory=factory&name=${factory_id}`,
-    {method:'GET'}).then((res) => res.json())
-    console.log(msg_history);
-    if (msg_history !== 'Not found'){
+    {method:'GET'}).then((res) => res.json());
+    console.log('msg_history: ', msg_history);
+
+    if (msg_history !== 'Not found' &  Object.keys(msg_history).length !== 0){
         mesList = msg_history;
         for (let name in mesList){
             $('.client-ul').append(`<li class="client-li"  data-name='${name}'>${name}</li>`)
         }
-    }
+    } else {console.log('no history')}
 
+    const iosocketServe = io.connect();
     iosocketServe.on('connect', function () {
+        console.log('connected')
         iosocketServe.on(`${factory_id}`, function (msg) {
+            console.log('get message')
             updateRoomView('client', msg, msg.from)
         })
     })
@@ -52,7 +56,7 @@ function updateRoomView(type, msg, fromName) { // 收到訊息 更改視窗
         '<div class="jiao-right"></div>' +
         '</div>' +
         '</div>' +
-        '<img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572953950629&di=06d8eb509480525ed9707e4dda361b54&imgtype=0&src=http%3A%2F%2Fimg2.3png.com%2F720f7b22a939834aca195ca984dcd114a6e2.png" class="avatar" />' +
+        '<img src="/static/img/factory.jpg" class="avatar" />' +
         '</div>';
         $(".room").append(html);
         $('.room').scrollTop($('.room')[0].scrollHeight);
@@ -60,7 +64,7 @@ function updateRoomView(type, msg, fromName) { // 收到訊息 更改視窗
     else if (type == 'client' && currentClient.name == fromName) { // 客户消息
         var html = "";
         html += `<div class="msg-item row recive">
-                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572927293148&di=e93c4aabed259d8845543f725b85d1b3&imgtype=0&src=http%3A%2F%2Fimg.zcool.cn%2Fcommunity%2F01460b57e4a6fa0000012e7ed75e83.png%401280w_1l_2o_100sh.png" class="avatar" />
+                <img src="/static/img/msn.png" class="avatar" />
                 <div class="col">
                     <div class="name">${fromName}</div>
                     <div class="row mesinfo">
@@ -112,6 +116,7 @@ function resizeRoomView() { // 切換對話者時 更改對談內容
         html += getMsgHtml(list[i], currentClient.name)
     }
     $('.room').html(html)
+    $('.room').scrollTop($('.room')[0].scrollHeight);
 }
 function getMsgHtml(msg, name) { // 切換客戶
     if (msg.from == factory_id) {
@@ -125,12 +130,12 @@ function getMsgHtml(msg, name) { // 切換客戶
                     <div class="jiao-right"></div>
                     </div>
                 </div>
-                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572953950629&di=06d8eb509480525ed9707e4dda361b54&imgtype=0&src=http%3A%2F%2Fimg2.3png.com%2F720f7b22a939834aca195ca984dcd114a6e2.png" class="avatar" />
+                <img src="/static/img/factory.jpg" class="avatar" />
                 </div>`
     }   
     else {
         return `<div class="msg-item row recive">
-                <img src="https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572927293148&di=e93c4aabed259d8845543f725b85d1b3&imgtype=0&src=http%3A%2F%2Fimg.zcool.cn%2Fcommunity%2F01460b57e4a6fa0000012e7ed75e83.png%401280w_1l_2o_100sh.png" class="avatar" />
+                <img src="/static/img/msn.png" class="avatar" />
                 <div class="col">
                 <div class="name">${name}</div>
                 <div class="row mesinfo">
@@ -141,7 +146,7 @@ function getMsgHtml(msg, name) { // 切換客戶
                 </div>
             </div>`
     }
-
+    
 }
 
 

@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify
-import socket, json
+import socket, json, pymongo, time
 from flask import request, url_for, redirect, flash, abort
 from datetime import datetime
 import hashlib
@@ -36,54 +36,88 @@ users = {
     "wade": {
         "password": "2c6eccac92d3723c708c7dea066ce7b5c5f37c889a6227b6fc7266581542ba7f"
     },
+    'steven':{
+        "password": "2c6eccac92d3723c708c7dea066ce7b5c5f37c889a6227b6fc7266581542ba7f"
+    }
 }
 
-factory_list = ['osense', 'timtos']
+factory_list = ['osense', 'timtos', 'google', 'amazon','tsmc']
 
 class User(UserMixin):
     pass
 
+# === mongo =====
+myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mydb = myclient["osense-messenger"]
+collection_mes_factory = mydb["mes_factory"]
+collection_mes_client = mydb["mes_client"]
+
+# col_list = mydb.list_collection_names()
+
+# if 'mes_factory' not in col_list:
+#     mes_factory = {x : {} for x in factory_list}
+# else: 
+#     mongo_mes_factory = mydb["mes_factory"].find()
+
+# if 'mes_client' not in col_list:
+#     mes_client = {}
+# else: 
+#     mongo_mes_client = mydb["mes_factory"].find()
+
+
 #  ==== socket ====
-mesList = {}
+
 mes_factory = {x : {} for x in factory_list}
 mes_client = {}
 
 @socketio.on('msgFromClient')
 def msgFromClient(msg):
-    if msg['from'] not in mes_client:
-        mes_client[msg['from']] = {}
-    if msg['name'] not in mes_client[msg['from']]:
-        mes_client[msg['from']][msg['name']] = {
-            'list': [],
-            'noread': True
-        }
-        mes_factory[msg['name']][msg['from']]= {
-            'list': [],
-            'noread': True
-        }
-    mes_client[msg['from']][msg['name']]['list'].append(msg)
-
-    # if msg['from'] not in mes_factory['name']:
-    #     mes_factory['name']['from']= {
+    # if msg['from'] not in mes_client:
+    #     mes_client[msg['from']] = {}
+    # if msg['name'] not in mes_client[msg['from']]:
+    #     mes_client[msg['from']][msg['name']] = {
     #         'list': [],
     #         'noread': True
     #     }
-    mes_factory[msg['name']][msg['from']]['list'].append(msg)
+    #     mes_factory[msg['name']][msg['from']]= {
+    #         'list': [],
+    #         'noread': True
+    #     }
+
+    # mes_client[msg['from']][msg['name']]['list'].append(msg)
+    # mes_factory[msg['name']][msg['from']]['list'].append(msg)
+
     emit(msg['name'], msg, broadcast=True)
-    print(mes_client)
+    client = msg['from']
+    factory = msg['name']
+    start = time.time()
+    collection_mes_factory.find_one_and_update({'name': factory, 'to': client, 'noread':'false'}, 
+    {'$push': { 'list': msg }},upsert=True)
+    collection_mes_client.find_one_and_update({'name': client, 'to': factory, 'noread':'false'}, 
+    {'$push': { 'list': msg }},upsert=True)
+    print('elapsed time ', time.time()-start)
+    
+    # print(mes_client)
 
 @socketio.on('msgFromFactory')
 def msgFromFactory(msg):
-    # if msg['name'] not in mes_factory[msg['from']]:
-    #     mes_factory[msg['from']][msg['name']] = {
-    #         'list': [],
-    #         'noread': True
-    #     }
-    mes_factory[msg['from']][msg['name']]['list'].append(msg)
-    mes_client[msg['name']][msg['from']]['list'].append(msg)
-    emit(msg['name'], msg, broadcast=True)
-    print(mes_factory)
 
+    # mes_factory[msg['from']][msg['name']]['list'].append(msg)
+    # mes_client[msg['name']][msg['from']]['list'].append(msg)
+    emit(msg['name'], msg, broadcast=True)
+
+    client = msg['name']
+    factory = msg['from']
+
+    start = time.time()
+
+    collection_mes_factory.find_one_and_update({'name': factory, 'to': client, 'noread':'false'}, 
+    {'$push': { 'list': msg }},upsert=True)
+    collection_mes_client.find_one_and_update({'name': client, 'to': factory, 'noread':'false'}, 
+    {'$push': { 'list': msg }},upsert=True)
+    
+    # print(mes_factory)
+    print('elapsed time ', time.time()-start)
 
 
 # ===== end socket =====
@@ -107,7 +141,7 @@ def login():
     if request.method == "GET":
         if current_user.is_active:
             if 'factory' in users[current_user.get_id()] and users[current_user.get_id()]['factory'] == True:
-                return redirect(url_for("factory", factory_id = current_user.get_id()))
+                return redirect(url_for("factory"))
             else:
                 return redirect(url_for("client"))
         return render_template("login.html")
@@ -121,17 +155,22 @@ def login():
             user.id = user_id
             login_user(user)
             if 'factory' in users[current_user.get_id()] and users[current_user.get_id()]['factory'] == True:
-                return redirect(url_for("factory", factory_id = user_id))
+                return redirect(url_for("factory"))
             else:
                 return redirect(url_for("client"))
 
         flash("login failed... ")
         return render_template("login.html")
 
-@app.route("/factory/<factory_id>")
+# @app.route("/factory/<factory_id>")
+# @login_required
+# def factory(factory_id):
+#     return render_template("factory.html", factory_id = factory_id)
+
+@app.route("/factory")
 @login_required
-def factory(factory_id):
-    return render_template("factory.html", factory_id = factory_id)
+def factory():
+    return render_template("factory.html", factory_id = current_user.id)
 
 
 @app.route("/logout")
@@ -169,18 +208,29 @@ def get_factory_list():
 
 @app.route("/get_history_msg")
 def get_history_msg():
-    global mesList
+    global mes_factory, mes_client
     clientOrFactory = request.args['clientOrFactory']
     name = request.args['name']
-
-    # http://127.0.0.1:5000/get_history_msg?clientOrFactory=factory&factory=456&client=789
+    return_message = {}
+    # http://127.0.0.1:5000/get_history_msg?clientOrFactory=factory&name=osense
     if clientOrFactory == 'factory':
-        if name in mes_factory:
-            return jsonify(mes_factory[name])
-    else:
-        if name in mes_client:
-            return jsonify(mes_client[name])
 
+        # if name in mes_factory:
+        #     return jsonify(mes_factory[name])
+        history_msg = collection_mes_factory.find({'name': name},
+         { "_id": 0 })        
+        for row in history_msg:
+            return_message[row['to']] = {'list' : row['list'], 'noread': row['noread']}
+        return return_message
+
+    else:
+        # if name in mes_client:
+        #     return jsonify(mes_client[name])
+        history_msg = collection_mes_client.find({'name': name},
+         { "_id": 0})
+        for row in history_msg:
+            return_message[row['to']] = {'list' : row['list'], 'noread': row['noread']}
+        return return_message
     return jsonify('Not found')
 
 if __name__ == "__main__":
