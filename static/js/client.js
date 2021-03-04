@@ -168,8 +168,13 @@ function changeCurrent_factory(e) {
     $(target).removeClass('noread')
     $('#factory_window_name').text(name);
     resizeRoomView()
-    const iosocketServe = io.connect();
-    iosocketServe.emit('read_msg_fromClient', userName, name);     
+    console.log(mesList)
+    if (mesList[name]['noread'] == 'true') {
+        const iosocketServe = io.connect();
+        iosocketServe.emit('read_msg_fromClient', userName, name); 
+        mesList[name]['noread'] = 'false';
+    }
+
 }
 
 document.onkeydown = function (e) {

@@ -164,8 +164,12 @@ function changeCurrentClient(e) {
     $(target).removeClass('noread')
     $('#client_window_name').text(name);
     resizeRoomView()
-    const iosocketServe = io.connect();
-    iosocketServe.emit('read_msg_fromFactory', factory_id, name); 
+    console.log(mesList)
+    if (mesList[name]['noread'] == 'true') {
+        const iosocketServe = io.connect();
+        iosocketServe.emit('read_msg_fromFactory', factory_id, name); 
+        mesList[name]['noread'] = 'false';
+    }
 }
 
 

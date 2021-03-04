@@ -1,3 +1,5 @@
+import eventlet
+eventlet.monkey_patch(socket=True)
 from flask import Flask, render_template, jsonify
 import socket, json, pymongo, time
 from flask import request, url_for, redirect, flash, abort
@@ -13,9 +15,13 @@ from flask_login import (
     current_user,
 )
 
+
 app = Flask(__name__)
-app.secret_key = "finn"
-socketio = SocketIO(app)
+app.secret_key = "chris"
+# socketio = SocketIO(app,  async_mode='eventlet', engineio_logger=True)
+
+# socketio = SocketIO(app, message_queue='redis://127.0.0.1:6379', async_mode='threading', engineio_logger=True) # for auto-scaling
+socketio = SocketIO(app, message_queue='redis://127.0.0.1:6379',  async_mode='eventlet', engineio_logger=True) # for auto-scaling
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -53,9 +59,21 @@ collection_mes_factory = mydb["mes_factory"]
 collection_mes_client = mydb["mes_client"]
 
 #  ==== socket ====
+online_people = []
 
-mes_factory = {x : {} for x in factory_list}
-mes_client = {}
+# mes_factory = {x : {} for x in factory_list}
+# mes_client = {}
+
+# @socketio.on('people_in')
+# def people_in(name):
+#     print('people_in')
+
+#     emit('people_in', msg, broadcast=True)
+#     client = msg['name']
+#     factory = msg['from']
+
+
+
 
 @socketio.on('msgFromClient')
 def msgFromClient(msg):
@@ -73,7 +91,7 @@ def msgFromClient(msg):
 
     # mes_client[msg['from']][msg['name']]['list'].append(msg)
     # mes_factory[msg['name']][msg['from']]['list'].append(msg)
-
+    print('get message')
     emit(msg['name'], msg, broadcast=True)
     client = msg['from']
     factory = msg['name']
@@ -86,7 +104,7 @@ def msgFromClient(msg):
     
 @socketio.on('msgFromFactory')
 def msgFromFactory(msg):
-
+    print('get message')
     # mes_factory[msg['from']][msg['name']]['list'].append(msg)
     # mes_client[msg['name']][msg['from']]['list'].append(msg)
     emit(msg['name'], msg, broadcast=True)
