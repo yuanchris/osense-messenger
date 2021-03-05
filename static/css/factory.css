@@ -28,6 +28,7 @@
     padding: 0;
   }
   .serve-page .list-panel li {
+    display: flex;
     list-style: none;
     margin-bottom: 2px;
     background: #eee;
@@ -67,4 +68,18 @@
   .news-panel li {
     list-style: none;
     margin-bottom: 14px;
+  }
+  .ball {
+    display:block;
+    width:10px;
+    height:10px;
+
+    border-radius:10px;
+
+    background-color:grey;
+    margin-top: 8px;
+    margin-right: 12px;
+  }
+  .green {
+    background-color:green;
   }

@@ -11,18 +11,41 @@ $(document).ready(async function () {
         mesList = msg_history;
         for (let name in mesList){
             if (mesList[name].noread == 'true') {
-                $('.client-ul').append(`<li class="client-li noread"  data-name='${name}'>${name}</li>`)
+                $('.client-ul').append(`<li class="client-li noread"  data-name='${name}'><span class="ball"></span>${name}</li>`)
             } else {
-                $('.client-ul').append(`<li class="client-li"  data-name='${name}'>${name}</li>`)
+                $('.client-ul').append(`<li class="client-li"  data-name='${name}'><span class="ball"></span>${name}</li>`)
             }
         }
     } else {console.log('no history')}
 
     const iosocketServe = io.connect();
     iosocketServe.on('connect', function () {
+
+        iosocketServe.emit('join', {class:'factory', room: factory_id, username: factory_id});
+
         iosocketServe.on(`${factory_id}`, function (msg) {
-            updateRoomView('client', msg, msg.from)
+            updateRoomView('client', msg, msg.from);
         })
+        iosocketServe.on(`client_in`, function (msg) {
+            console.log('client in');
+            $(`li[data-name='${msg['username']}'] span`).addClass('green')
+
+        })
+        iosocketServe.on(`client_out`, function (msg) {
+            $(`li[data-name='${msg['username']}'] span`).removeClass('green')
+
+        })
+
+        iosocketServe.on(`${factory_id}_online`, function (online_client) {
+            console.log('online_client:', online_client);
+            for (let i in online_client) {
+                $(`li[data-name='${online_client[i]}'] span`).addClass('green')
+            }            
+        })
+        $(window).on('beforeunload', function() {
+            iosocketServe.emit('send_disconnect', {class:'factory', room: factory_id, username: factory_id})
+          });
+    
     })
     $('.btn-blue').click(function () {
         if (currentClient.name!=null) {
@@ -90,7 +113,7 @@ function addMsg(msg, clientName) { // 儲存到mesList 若不是當前使用者�
           list: [],
           noread: "false"
         }
-        $('.client-ul').append(`<li class="client-li"  data-name='${clientName}'>${clientName}</li>`)
+        $('.client-ul').append(`<li class="client-li"  data-name='${clientName}'><span class="ball green"></span>${clientName}</li>`)
       }
     
     let noread = "false"

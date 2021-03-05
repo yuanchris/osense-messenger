@@ -24,24 +24,43 @@ $(document).ready(async function () {
           }
 
         if (mesList[factory_list[i]].noread == 'true') {
-            $('.client-ul').append(`<li class="client-li noread"  data-name='${factory_list[i]}'>${factory_list[i]}</li>`)
+            $('.client-ul').append(`<li class="client-li noread"  data-name='${factory_list[i]}'><span class="ball"></span>${factory_list[i]}</li>`)
         } else {
-            $('.client-ul').append(`<li class="client-li"  data-name='${factory_list[i]}'>${factory_list[i]}</li>`)
+            $('.client-ul').append(`<li class="client-li"  data-name='${factory_list[i]}'><span class="ball"></span>${factory_list[i]}</li>`)
         }  
     }
 
     const iosocketServe = io.connect();
     iosocketServe.on('connect', function () {
+        iosocketServe.emit('join', {class:'client', username: userName});
+
         iosocketServe.on(`${userName}`, function (msg) {
-            updateRoomView('other', msg, msg.from)
+            updateRoomView('other', msg, msg.from);
+        });
+        iosocketServe.on(`factory_in`, function (msg) {
+            $(`li[data-name='${msg['username']}'] span`).addClass('green')
+
         })
+        iosocketServe.on(`factory_out`, function (msg) {
+            $(`li[data-name='${msg['username']}'] span`).removeClass('green')
+            console.log('factory_out')
+        })
+
+        iosocketServe.on(`${userName}_online`, function (online_factory) {
+            console.log('online_factory:', online_factory);
+            for (let i in online_factory) {
+                $(`li[data-name='${online_factory[i]}'] span`).addClass('green')
+            }
+        })
+        $(window).on('beforeunload', function() {
+            iosocketServe.emit('send_disconnect', {class:'client', username: userName})
+          });
+
     })
     $('.btn-blue').click(function () {
         if (current_factory.name!=null) {
-            console.log('in currnt_facotry')
             let text = $(".mesbox").val();
             if (text != "") {
-                console.log('in text')
                 let data = {
                     from: userName,
                     name: current_factory['name'],

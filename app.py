@@ -47,8 +47,6 @@ users = {
     }
 }
 
-factory_list = ['osense', 'timtos', 'google', 'amazon','tsmc']
-
 class User(UserMixin):
     pass
 
@@ -59,20 +57,43 @@ collection_mes_factory = mydb["mes_factory"]
 collection_mes_client = mydb["mes_client"]
 
 #  ==== socket ====
-online_people = []
+factory_list = ['osense', 'timtos', 'google', 'amazon','tsmc']
+online_factory = set()
+online_client = set()
 
 # mes_factory = {x : {} for x in factory_list}
 # mes_client = {}
 
-# @socketio.on('people_in')
-# def people_in(name):
-#     print('people_in')
+@socketio.on('join')
+def join(data):
+    if data['class'] == 'factory':
+        join_room(data['room'])
+        emit('factory_in', data,  room = data['room'])
+        online_factory.add(data['username'])
+        emit(f"{data['username']}_online", list(online_client),  room = data['room'])
 
-#     emit('people_in', msg, broadcast=True)
-#     client = msg['name']
-#     factory = msg['from']
+    else:
+        for i in factory_list:
+            join_room(i)
+            emit('client_in', data,  room = i)
+            online_client.add(data['username'])
+        emit(f"{data['username']}_online", list(online_factory),  room = factory_list[0])
 
-
+@socketio.on('send_disconnect')
+def send_disconnect(data):
+    print('send_disconnect')
+    if data['class'] == 'factory':
+        print('send_disconnect')
+        emit('factory_out', data,  room = data['room'])
+        online_factory.remove(data['username'])
+        leave_room(data['room'])
+    else:
+        for i in factory_list:
+            
+            emit('client_out', data,  room = i)
+            online_client.discard(data['username'])
+            leave_room(i)
+            
 
 
 @socketio.on('msgFromClient')
@@ -92,9 +113,10 @@ def msgFromClient(msg):
     # mes_client[msg['from']][msg['name']]['list'].append(msg)
     # mes_factory[msg['name']][msg['from']]['list'].append(msg)
     print('get message')
-    emit(msg['name'], msg, broadcast=True)
     client = msg['from']
     factory = msg['name']
+    emit(msg['name'], msg, room = factory)
+
     start = time.time()
     collection_mes_factory.find_one_and_update({'name': factory, 'to': client}, 
     {'$push': { 'list': msg }, "$set": { "noread": "true" }},upsert=True)
@@ -107,9 +129,10 @@ def msgFromFactory(msg):
     print('get message')
     # mes_factory[msg['from']][msg['name']]['list'].append(msg)
     # mes_client[msg['name']][msg['from']]['list'].append(msg)
-    emit(msg['name'], msg, broadcast=True)
     client = msg['name']
     factory = msg['from']
+    emit(msg['name'], msg, room = factory)
+
 
     collection_mes_factory.find_one_and_update({'name': factory, 'to': client}, 
     {'$push': { 'list': msg }, "$set": { "noread": "false"}},upsert=True)
@@ -215,7 +238,6 @@ def get_factory_list():
 
 @app.route("/get_history_msg")
 def get_history_msg():
-    global mes_factory, mes_client
     clientOrFactory = request.args['clientOrFactory']
     name = request.args['name']
     return_message = {}
@@ -242,5 +264,5 @@ def get_history_msg():
 
 if __name__ == "__main__":
     # app.config['TEMPLATES_AUTO_RELOAD'] = True
-    app.debug = True
+    # app.debug = True
     socketio.run(app, host="0.0.0.0", port=5000)
